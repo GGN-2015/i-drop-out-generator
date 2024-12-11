@@ -1,5 +1,6 @@
 import os
 from PIL import Image, ImageDraw, ImageFont
+import re
 
 dirnow  = os.path.dirname(os.path.abspath(__file__))
 imgdir  = os.path.join(dirnow, "img", "base.png")
@@ -20,6 +21,16 @@ def find_max_x_non_white_pixel(image):
                 max_x = max(max_x, x)
     return max_x if max_x != -1 else None  # 如果没有非白色像素，返回 None
 
+# 从文字中获取颜色
+def get_color_now_from_text(text: str):
+    pattern = r'\[\d+,\d+,\d+\]'
+    matches = re.findall(pattern, text)
+    lastterm = [0, 0, 0]
+    for term in matches:
+        lastterm = eval(term)
+        text = text.replace(term, "")
+    return text, tuple(lastterm)
+
 # 生成一张图片
 def generate_text_image(text: str):
     width, height = 1920, 50
@@ -27,7 +38,8 @@ def generate_text_image(text: str):
     draw = ImageDraw.Draw(image)
     font = ImageFont.truetype(fontdir, 36)
     position = (0, 0)
-    draw.text(position, text, fill="black", font=font)
+    text, color_now = get_color_now_from_text(text)
+    draw.text(position, text, fill=color_now, font=font)
     xmax = find_max_x_non_white_pixel(image)
     return image.crop((0, 0, xmax, height))
 
